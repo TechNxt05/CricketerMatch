@@ -35,8 +35,9 @@ const App = () => {
     const element = document.querySelector('.result-card');
     if (element) {
       const canvas = await html2canvas(element, {
-        backgroundColor: null, // Keep transparency if any
-        scale: 2 // High res
+        backgroundColor: '#0a0a0a', // Dark background to prevent fading
+        scale: 2, // High resolution
+        useCORS: true // Handle cross-origin images if any
       });
       const data = canvas.toDataURL('image/png');
       const link = document.createElement('a');
