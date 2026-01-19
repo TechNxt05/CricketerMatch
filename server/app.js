@@ -5,7 +5,6 @@ const connectDB = require("./db");
 const UserResponse = require("./models/UserResponse");
 const calculateMatch = require("./analysis");
 const cricketers = require("./data/cricketers");
-const nodemailer = require("nodemailer");
 
 dotenv.config();
 connectDB();
@@ -54,14 +53,6 @@ app.post("/analyze", async (req, res) => {
 
     const topMatch = sortedMatches[0];
 
-    // Try sending email but don't fail request if it fails
-    try {
-      await sendEmail(email, name, result, topMatch.name);
-    } catch (emailError) {
-      console.error("Email Error:", emailError);
-      // Continue execution
-    }
-
     // Return top 5 matches
     res.json({
       match: topMatch,
@@ -87,33 +78,6 @@ app.get("/responses", async (req, res) => {
   const results = await UserResponse.find(filter).sort({ createdAt: -1 });
   res.json(results);
 });
-
-// Email function
-async function sendEmail(email, name, result, topCricketer) {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.log("Skipping email: No credentials");
-    return;
-  }
-
-  const transporter = nodemailer.createTransport({
-    service: "Gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-
-  const resultText = Object.entries(result)
-    .map(([k, v]) => `${k}: ${v}%`)
-    .join("\n");
-
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: `Your Cricketer Match Result: ${topCricketer}`,
-    text: `Hello ${name},\n\nHere are your match results:\n\n${resultText}\n\nTop Match: ${topCricketer}`
-  });
-}
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
