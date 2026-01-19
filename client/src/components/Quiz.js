@@ -9,7 +9,7 @@ const Quiz = ({ onSubmit }) => {
 
   useEffect(() => {
     // Fetch questions from backend
-    axios.get("http://localhost:5000/questions")
+    axios.get("https://cricketermatch.onrender.com/questions")
       .then(res => {
         setQuestions(res.data);
         setLoading(false);

@@ -20,7 +20,7 @@ const App = () => {
     try {
       // Fake delay for "Calculating..." effect
       setTimeout(async () => {
-        const res = await axios.post('http://localhost:5000/analyze', { name, answers });
+        const res = await axios.post('https://cricketermatch.onrender.com/analyze', { name, answers });
         setResultData(res.data);
         setIsLoading(false);
         setIsCalculated(true);
