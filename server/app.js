@@ -17,7 +17,14 @@ app.use(express.json());
 const questions = require("./data/questions");
 
 app.get("/questions", (req, res) => {
-  res.json(questions);
+  // Fisher-Yates Shuffle
+  const shuffled = [...questions];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  // Return first 20
+  res.json(shuffled.slice(0, 20));
 });
 
 // Submit response

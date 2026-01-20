@@ -3,35 +3,59 @@ const cricketers = require("./data/cricketers");
 function calculateMatch(userTraits) {
   const scores = {};
 
-  Object.entries(cricketers).forEach(([name, data]) => {
-    let matchCount = 0;
+  // 1. Calculate frequency of each trait in user's answers
+  const traitFrequency = {};
+  userTraits.forEach(t => {
+    traitFrequency[t] = (traitFrequency[t] || 0) + 1;
+  });
 
-    // Strict matching
+  Object.entries(cricketers).forEach(([name, data]) => {
+    let score = 0;
+
+    // 2. Sum up frequencies for this cricketer's traits
+    // If a cricketer has 'calm' and user picked 'calm' 3 times, add 3.
     data.traits.forEach(trait => {
-      if (userTraits.includes(trait)) {
-        matchCount++;
+      if (traitFrequency[trait]) {
+        score += traitFrequency[trait];
       }
     });
 
-    // Score Calculation Upgrade:
-    // We normalize by the number of player traits to see "how much of THIS player fits user choices"
-    // But we also add a weight for absolute number of matches to reward hitting many key traits.
+    // 3. Normalize score?
+    // Max possible score for a cricketer = sum of their trait frequencies * max_weight? 
+    // Easier: Just use raw weighted score first, then convert to percentage relative to "perfect match".
+    // A perfect match would be if EVERY user answer contributed to this cricketer.
+    // Max traits collected = userTraits.length. 
+    // So if user picked 20 options * ~2 traits/option = 40 traits.
+    // If a cricketer hits 15 of those, that's their score.
 
-    const traitCount = Math.max(data.traits.length, 5);
+    // Let's stick to a relative percentage against the "Best Possible for THIS User" or just raw comparison.
+    // The previous logic returned percentage 0-100. Frontend expects %.
 
-    // Base Percentage: (Matches / PlayerTraits) * 100
-    // If a player has only 5 traits and you match 5, that's 100%.
-    // If a player has 10 traits and you match 5, that's 50%.
-    // This rewards specificity.
+    // Let's cap matching. If you matched 10+ points, that's high.
+    // Let's refine:
+    // We compare the cricketer's score against the TOTAL traits they COULD have matched.
+    // Actually, simple percentage of "Traits Matched / Total User Traits" favors generic players?
+    // No, let's do: Score / (CricketerTraitsCount * AverageMultiplier) 
 
-    let rawScore = (matchCount / traitCount) * 100;
+    // Alternative:
+    // Similarity Score.
+    // Let's use the frequency Score calculated above.
 
-    // Tie-Breaker / Differentiator
-    // If the decimal is .0, add a tiny random fraction based on name hash to keep order stable but distinct? 
-    // No, better to stick to pure logic.
-    // Let's round it to 1 decimal place to avoid long floats but distinct enough.
+    // To make it a percentage:
+    // Estimate max possible score for 20 questions ~ 30-40 points.
+    // Let's map the highest scorer to ~95-98% and others relative to that.
 
-    scores[name] = Math.round(rawScore);
+    scores[name] = score;
+  });
+
+  // Normalize scores to percentages
+  const maxScore = Math.max(...Object.values(scores)) || 1;
+
+  Object.keys(scores).forEach(name => {
+    // Map maxScore to 98%, others relative
+    // Avoid 100% to keep it realistic, or allow it.
+    let pct = (scores[name] / maxScore) * 100;
+    scores[name] = Math.round(pct);
   });
 
   return scores;
